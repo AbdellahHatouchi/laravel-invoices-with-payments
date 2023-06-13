@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\View;
 use LaravelDaily\Invoices\Classes\InvoiceItem;
 use LaravelDaily\Invoices\Classes\Party;
+use LaravelDaily\Invoices\Classes\PaymentItem;
 use LaravelDaily\Invoices\Contracts\PartyContract;
 use LaravelDaily\Invoices\Traits\CurrencyFormatter;
 use LaravelDaily\Invoices\Traits\DateFormatter;
@@ -49,6 +50,8 @@ class Invoice
      * @var Collection
      */
     public $items;
+
+    public $payments;
 
     /**
      * @var string
@@ -109,6 +112,7 @@ class Invoice
      * @var float
      */
     public $total_amount;
+    public $total_payments;
 
     /**
      * @var bool
@@ -168,6 +172,7 @@ class Invoice
         $this->name     = $name ?: __('invoices::invoice.invoice');
         $this->seller   = app()->make(config('invoices.seller.class'));
         $this->items    = Collection::make([]);
+        $this->payments    = Collection::make([]);
         $this->template = 'default';
 
         // Date
@@ -231,6 +236,10 @@ class Invoice
     {
         return (new InvoiceItem())->title($title);
     }
+    public static function makePayemnt(string $ref = '')
+    {
+        return (new PaymentItem())->referance($ref);
+    }
 
     /**
      * @return $this
@@ -238,6 +247,12 @@ class Invoice
     public function addItem(InvoiceItem $item)
     {
         $this->items->push($item);
+
+        return $this;
+    }
+    public function addPayment(PaymentItem $item)
+    {
+        $this->payments->push($item);
 
         return $this;
     }
@@ -251,6 +266,14 @@ class Invoice
     {
         foreach ($items as $item) {
             $this->addItem($item);
+        }
+
+        return $this;
+    }
+    public function addPayments($items)
+    {
+        foreach ($items as $item) {
+            $this->addPayment($item);
         }
 
         return $this;

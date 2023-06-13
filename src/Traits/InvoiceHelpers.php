@@ -134,6 +134,12 @@ trait InvoiceHelpers
 
         return $this;
     }
+    public function totalPayments(float $total_payemnts)
+    {
+        $this->totalPayments = $total_payemnts;
+
+        return $this;
+    }
 
     /**
      * @return $this
@@ -340,6 +346,7 @@ trait InvoiceHelpers
         }
     }
 
+
     /**
      * @return $this
      */
@@ -348,6 +355,8 @@ trait InvoiceHelpers
         $total_amount   = null;
         $total_discount = null;
         $total_taxes    = null;
+
+        $total_payments = null;
 
         $this->items->each(
             function ($item) use (&$total_amount, &$total_discount, &$total_taxes) {
@@ -378,7 +387,13 @@ trait InvoiceHelpers
                 $total_amount += $item->sub_total_price;
             }
         );
-
+        $this->payments->each(
+            function ($payment) use (&$total_payments)
+            {
+                $total_payments += $payment->amount;
+            }
+        );
+        $belonce = $total_amount - $total_payments;
         $this->applyColspan();
 
         /*
@@ -386,9 +401,10 @@ trait InvoiceHelpers
          * totalAmount(), totalDiscount(), discountByPercent(), totalTaxes(), taxRate()
          * or use values calculated from items.
          */
+        $this->total_payments = $total_payments;
         $this->hasTotalAmount() ?: $this->total_amount                            = $total_amount;
-        $this->hasDiscount() ? $this->calculateDiscount() : $this->total_discount = $total_discount;
         $this->hasTax() ? $this->calculateTax() : $this->total_taxes              = $total_taxes;
+        $this->hasDiscount() ? $this->calculateDiscount() : $this->total_discount = $total_discount;
         ! $this->hasShipping() ?: $this->calculateShipping();
 
         return $this;
